@@ -26,7 +26,7 @@ defined('MOODLE_INTERNAL') || die();
 
 $capabilities = array(
     /* This is used only when sync suspends users instead of full unenrolment. */
-    'enrol/database:unenrol' => array(
+    'enrol/uoa_ldap_database:unenrol' => array(
 
         'captype' => 'write',
         'contextlevel' => CONTEXT_COURSE,
@@ -34,7 +34,7 @@ $capabilities = array(
             'manager' => CAP_ALLOW,
         )
     ),
-    'enrol/database:config' => array(
+    'enrol/uoa_ldap_database:config' => array(
         'captype' => 'write',
         'contextlevel' => CONTEXT_COURSE,
         'archetypes' => array(

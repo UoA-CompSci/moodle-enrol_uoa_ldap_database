@@ -128,7 +128,7 @@ if ($ADMIN->fulltree) {
 
     $settings->add(new admin_setting_configtext('enrol_uoa_ldap_database/newcoursecategory', get_string('newcoursecategory', 'enrol_uoa_ldap_database'), '', ''));
 
-    require_once($CFG->dirroot.'/enrol/database/settingslib.php');
+    require_once($CFG->dirroot.'/enrol/uoa_ldap_database/settingslib.php');
 
     $settings->add(new enrol_uoa_ldap_database_admin_setting_category('enrol_uoa_ldap_database/defaultcategory', get_string('defaultcategory', 'enrol_uoa_ldap_database'), get_string('defaultcategory_desc', 'enrol_uoa_ldap_database')));
 

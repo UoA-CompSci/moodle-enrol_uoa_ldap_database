@@ -19,7 +19,7 @@
  *
  * Sample cron entry:
  * # 5 minutes past 4am
- * 5 4 * * * $sudo -u www-data /usr/bin/php /var/www/moodle/enrol/database/cli/sync.php
+ * 5 4 * * * $sudo -u www-data /usr/bin/php /var/www/moodle/enrol/uoa_ldap_database/cli/sync.php
  *
  * Notes:
  *   - it is required to use the web server account when executing PHP CLI scripts
@@ -54,11 +54,11 @@ Options:
 -h, --help            Print out this help
 
 Example:
-\$ sudo -u www-data /usr/bin/php enrol/database/cli/sync.php
+\$ sudo -u www-data /usr/bin/php enrol/uoa_ldap_database/cli/sync.php
 
 Sample cron entry:
 # 5 minutes past 4am
-5 4 * * * sudo -u www-data /usr/bin/php /var/www/moodle/enrol/database/cli/sync.php
+5 4 * * * sudo -u www-data /usr/bin/php /var/www/moodle/enrol/uoa_ldap_database/cli/sync.php
 ";
 
     echo $help;

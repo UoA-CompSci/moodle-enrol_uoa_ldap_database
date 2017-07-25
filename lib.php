@@ -172,7 +172,7 @@ class enrol_uoa_ldap_database_plugin extends enrol_plugin {
      */
     public function can_delete_instance($instance) {
         $context = context_course::instance($instance->courseid);
-        if (!has_capability('enrol/database:config', $context)) {
+        if (!has_capability('enrol/uoa_ldap_database:config', $context)) {
             return false;
         }
         if (!enrol_is_enabled('database')) {
@@ -194,7 +194,7 @@ class enrol_uoa_ldap_database_plugin extends enrol_plugin {
      */
     public function can_hide_show_instance($instance) {
         $context = context_course::instance($instance->courseid);
-        return has_capability('enrol/database:config', $context);
+        return has_capability('enrol/uoa_ldap_database:config', $context);
     }
 
     /**
@@ -227,7 +227,7 @@ class enrol_uoa_ldap_database_plugin extends enrol_plugin {
         $instance = $ue->enrolmentinstance;
         $params = $manager->get_moodlepage()->url->params();
         $params['ue'] = $ue->id;
-        if ($this->allow_unenrol_user($instance, $ue) && has_capability('enrol/database:unenrol', $context)) {
+        if ($this->allow_unenrol_user($instance, $ue) && has_capability('enrol/uoa_ldap_database:unenrol', $context)) {
             $url = new moodle_url('/enrol/unenroluser.php', $params);
             $actions[] = new user_enrolment_action(new pix_icon('t/delete', ''), get_string('unenrol', 'enrol'), $url, array('class'=>'unenrollink', 'rel'=>$ue->id));
         }
