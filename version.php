@@ -17,7 +17,7 @@
 /**
  * Database enrolment plugin version specification.
  *
- * @package    enrol_database
+ * @package    enrol_uoa_ldap_database
  * @copyright  2010 Petr Skoda {@link http://skodak.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -26,5 +26,5 @@ defined('MOODLE_INTERNAL') || die();
 
 $plugin->version   = 2016052300;        // The current plugin version (Date: YYYYMMDDXX)
 $plugin->requires  = 2016051900;        // Requires this Moodle version
-$plugin->component = 'enrol_database';  // Full name of the plugin (used for diagnostics)
+$plugin->component = 'enrol_uoa_ldap_database';  // Full name of the plugin (used for diagnostics)
 //TODO: should we add cron sync?

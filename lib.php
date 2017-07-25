@@ -19,7 +19,7 @@
  *
  * This plugin synchronises enrolment and roles with external database table.
  *
- * @package    enrol_database
+ * @package    enrol_uoa_ldap_database
  * @copyright  2010 Petr Skoda {@link http://skodak.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -31,7 +31,7 @@ defined('MOODLE_INTERNAL') || die();
  * @author  Petr Skoda - based on code by Martin Dougiamas, Martin Langhoff and others
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class enrol_database_plugin extends enrol_plugin {
+class enrol_uoa_ldap_database_plugin extends enrol_plugin {
 
     //Start Minh's code
     public function sync_ldap_enrolments($user) {
@@ -374,19 +374,19 @@ class enrol_database_plugin extends enrol_plugin {
                 // Weird.
                 continue;
             }
-            $current = $DB->get_records('role_assignments', array('contextid'=>$context->id, 'userid'=>$user->id, 'component'=>'enrol_database', 'itemid'=>$instance->id), '', 'id, roleid');
+            $current = $DB->get_records('role_assignments', array('contextid'=>$context->id, 'userid'=>$user->id, 'component'=>'enrol_uoa_ldap_database', 'itemid'=>$instance->id), '', 'id, roleid');
 
             $existing = array();
             foreach ($current as $r) {
                 if (isset($roles[$r->roleid])) {
                     $existing[$r->roleid] = $r->roleid;
                 } else {
-                    role_unassign($r->roleid, $user->id, $context->id, 'enrol_database', $instance->id);
+                    role_unassign($r->roleid, $user->id, $context->id, 'enrol_uoa_ldap_database', $instance->id);
                 }
             }
             foreach ($roles as $rid) {
                 if (!isset($existing[$rid])) {
-                    role_assign($rid, $user->id, $context->id, 'enrol_database', $instance->id);
+                    role_assign($rid, $user->id, $context->id, 'enrol_uoa_ldap_database', $instance->id);
                 }
             }
         }
@@ -431,7 +431,7 @@ class enrol_database_plugin extends enrol_plugin {
                         // We want this "other user" to keep their roles.
                         continue;
                     }
-                    role_unassign_all(array('contextid'=>$context->id, 'userid'=>$user->id, 'component'=>'enrol_database', 'itemid'=>$instance->id));
+                    role_unassign_all(array('contextid'=>$context->id, 'userid'=>$user->id, 'component'=>'enrol_uoa_ldap_database', 'itemid'=>$instance->id));
                 }
             }
         }
@@ -624,7 +624,7 @@ class enrol_database_plugin extends enrol_plugin {
             $usermapping   = array();
             $sql = "SELECT u.$localuserfield AS mapping, u.id AS userid, ue.status, ra.roleid
                       FROM {user} u
-                      JOIN {role_assignments} ra ON (ra.userid = u.id AND ra.component = 'enrol_database' AND ra.itemid = :enrolid)
+                      JOIN {role_assignments} ra ON (ra.userid = u.id AND ra.component = 'enrol_uoa_ldap_database' AND ra.itemid = :enrolid)
                  LEFT JOIN {user_enrolments} ue ON (ue.userid = u.id AND ue.enrolid = ra.itemid)
                      WHERE u.deleted = 0";
             $params = array('enrolid'=>$instance->id);
@@ -718,7 +718,7 @@ class enrol_database_plugin extends enrol_plugin {
                 // Assign extra roles.
                 foreach ($userroles as $roleid) {
                     if (empty($currentroles[$userid][$roleid])) {
-                        role_assign($roleid, $userid, $context->id, 'enrol_database', $instance->id);
+                        role_assign($roleid, $userid, $context->id, 'enrol_uoa_ldap_database', $instance->id);
                         $currentroles[$userid][$roleid] = $roleid;
                         $trace->output("assigning roles: $userid ==> $course->shortname as ".$allroles[$roleid]->shortname, 1);
                     }
@@ -727,7 +727,7 @@ class enrol_database_plugin extends enrol_plugin {
                 // Unassign removed roles.
                 foreach ($currentroles[$userid] as $cr) {
                     if (empty($userroles[$cr])) {
-                        role_unassign($cr, $userid, $context->id, 'enrol_database', $instance->id);
+                        role_unassign($cr, $userid, $context->id, 'enrol_uoa_ldap_database', $instance->id);
                         unset($currentroles[$userid][$cr]);
                         $trace->output("unsassigning roles: $userid ==> $course->shortname", 1);
                     }
@@ -773,7 +773,7 @@ class enrol_database_plugin extends enrol_plugin {
                             // We want this "other user" to keep their roles.
                             continue;
                         }
-                        role_unassign_all(array('contextid'=>$context->id, 'userid'=>$userid, 'component'=>'enrol_database', 'itemid'=>$instance->id));
+                        role_unassign_all(array('contextid'=>$context->id, 'userid'=>$userid, 'component'=>'enrol_uoa_ldap_database', 'itemid'=>$instance->id));
 
                         $trace->output("unsassigning all roles: $userid ==> $course->shortname", 1);
                     }
