@@ -32,6 +32,138 @@ defined('MOODLE_INTERNAL') || die();
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class enrol_database_plugin extends enrol_plugin {
+
+    //Start Minh's code
+    public function sync_ldap_enrolments($user) {
+		global $CFG, $DB, $OUTPUT;
+		$correctExecution = true;
+		if (!$extdb = $this->db_init()) {
+			// Can not connect to database, sorry.
+			return;
+		}
+		
+		if($this->get_config('useofldap') == 0) return true;		
+		
+		//Get this year, and create Category
+		$currentYear = date("Y");
+		
+		echo $OUTPUT->notification("(-) This year is ".$currentYear.", check if category exist? if not, please create category ".$currentYear, 'notifysuccess');
+		
+		if(trim($this->get_config('ldapcourse')) == "") {
+			echo $OUTPUT->notification("(-) The seaching course field is empty.", 'notifyproblem');
+			return true;
+		}
+		
+		//clear external table `".$CFG->prefix."_course_ldap_external`
+		$sql = "TRUNCATE TABLE `".$CFG->prefix."course_ldap_external`;";
+		if ($rs = $extdb->Execute($sql)){
+			$correctExecution = true;
+			echo $OUTPUT->notification("(-) Clear external table `".$CFG->prefix."_course_ldap_external`", 'notifysuccess');
+		}
+		else {
+			return false;
+		}
+		
+		//clear external table `mdl_user_ldap_external`
+		$sql = "TRUNCATE TABLE `".$CFG->prefix."user_ldap_external`;";
+		if ($rs = $extdb->Execute($sql)){
+			$correctExecution = true;
+			echo $OUTPUT->notification("(-) Clear external table `".$CFG->prefix."_user_ldap_external`", 'notifysuccess');
+		}
+		else {
+			return false;
+		}
+		
+		//$courseNames are separated by spaces
+		$courseNames = preg_split("/[\s,]+/",$this->get_config('ldapcourse'));
+		//print_r($courseNames); return false;
+		if(count($courseNames) < 1) {
+			echo $OUTPUT->notification("(-)Problem:  Courses Lookup are empty", 'notifyproblem');
+			return true;
+		}
+		
+		foreach($courseNames as $courseName){
+			$courseName = strtoupper(trim($courseName));
+			//Get all active students this year, and register them			
+			$sqlActiveUsers = "INSERT IGNORE INTO `".$CFG->prefix."user` (`id`, `auth`, `confirmed`, `mnethostid`, `username`,`email`) VALUES ";	
+			$sqlCourses = "INSERT IGNORE INTO `".$CFG->prefix."course_ldap_external` (`idnumber`, `fullname`, `shortname`, `year`) VALUES ";
+						
+			$info = $this->getUserInfo($courseName);			
+			
+			$sql = "INSERT IGNORE INTO `".$CFG->prefix."user_ldap_external` (`upi`, `course_id`, `role`) VALUES ";
+			
+			//papers with more than 1 student
+			if(intval($info["count"]) > 0){
+				for($foundNo = 0; $foundNo < intval($info["count"]); $foundNo++)
+				{
+					if (array_key_exists("member",$info[$foundNo])){
+						if(intval($info[$foundNo]["member"]["count"]) > 0){
+							$currentPaper = str_replace("now",$currentYear , $this->getCN($info[$foundNo]["dn"]));
+							foreach($info[$foundNo]["member"] as $key => $value){
+							   if(is_numeric($key)) {
+								   	$studentUPI = $this->getCN($value);
+									$sql .= "('".$studentUPI."', '".$currentPaper."', 'student'),";		
+									$sqlCourses .= "('".$currentPaper."', '".$currentPaper."', '".$currentPaper."', $currentYear),";	
+									$sqlActiveUsers .= "(NULL, 'shibboleth', '1', '1', '".$studentUPI."', '".$studentUPI."@aucklanduni.ac.nz'),";
+							   }
+							}
+						}
+					}
+				}		
+				$sql = substr($sql, 0, -1);
+				$sqlCourses = substr($sqlCourses, 0, -1);
+				$sqlActiveUsers = substr($sqlActiveUsers, 0, -1);				
+				
+				if ($rs = $extdb->Execute($sql) && $rs = $extdb->Execute($sqlCourses) && $rs = $extdb->Execute($sqlActiveUsers)){
+					echo $OUTPUT->notification("(-) Get all active course and student enrolment of $courseName this year ($currentYear), and put them in external database table", 'notifysuccess');
+					$correctExecution = true;
+				}
+				else {
+					echo $OUTPUT->notification("(-)Problem:  Get all active course and student enrolment of $courseName this year ($currentYear), and put them in external database table", 'notifyproblem');
+					return false;
+				}	
+			}
+		}
+		return $correctExecution;
+	}
+	
+	protected function getUserInfo($upi, $filter='') {
+		$ldap = $this->myldap_connect();
+		if (!$ldap) return array();
+		$info = ldap_get_entries($ldap,ldap_search($ldap, $this->get_config('ldaplookup'), "(cn=$upi)",array("member")));
+		ldap_unbind($ldap);
+		if(!$info) return false;
+		return $info;		
+	}
+		
+	/*
+	* This function retrieves and returns CN from given DN
+	*/
+	protected function getCN($dn) {
+		preg_match('/[^,]*/', $dn, $matchs, PREG_OFFSET_CAPTURE, 3);
+		return $matchs[0][0];
+	}
+	protected function userFromUpi($upi) {
+		$info = $this->getUserInfo($upi);
+		return $info['displayname'];
+	}   
+	protected function extract_upi($entry) {
+		$start = strpos($entry, '=') + 1;   // +1 offset
+		$end = strpos($entry, ',');
+		return substr( $entry, $start, $end-$start);
+	}
+	// Connect and bind to the ldap host
+	protected function myldap_connect() {
+	  $connection = ldap_connect($this->get_config('ldaphost_url'));
+	  if ( ($connection) && (ldap_bind($connection, $this->get_config('ldapuser'), $this->get_config('ldappass'))) )
+		 return $connection;
+	  else
+		 return FALSE;
+	}    
+
+    //End Minh's code
+
+
     /**
      * Is it possible to delete enrol instance via standard UI?
      *
@@ -1027,7 +1159,8 @@ class enrol_database_plugin extends enrol_plugin {
         $CFG->debug = DEBUG_DEVELOPER;
         $olddebugdb = $this->config->debugdb;
         $this->config->debugdb = 1;
-        error_reporting($CFG->debug);
+        //error_reporting($CFG->debug);
+	error_reporting(E_ALL);
 
         $adodb = $this->db_init();
 
@@ -1041,6 +1174,13 @@ class enrol_database_plugin extends enrol_plugin {
             echo $OUTPUT->notification('Cannot connect the database.', 'notifyproblem');
             return;
         }
+
+    //Start Minh's code
+		$result = 0;
+		//Minh: run the auto enrolment
+		$trace = new null_progress_trace();
+		$result = $result | $this->sync_ldap_enrolments(null);
+    //End Minh's code
 
         if (!empty($enroltable)) {
             $rs = $adodb->Execute("SELECT *
@@ -1081,6 +1221,14 @@ class enrol_database_plugin extends enrol_plugin {
         }
 
         $adodb->Close();
+
+    //Start Minh's code
+		//Minh: run the synchronisation of enrolment
+		$result = $result | $this->sync_courses($trace);
+		$result = $result | $this->sync_enrolments($trace);
+		
+		echo $OUTPUT->notification('Everything is Synchronized now.', 'notifysuccess');
+    //End Minh's code
 
         $this->config->debugdb = $olddebugdb;
         $CFG->debug = $olddebug;

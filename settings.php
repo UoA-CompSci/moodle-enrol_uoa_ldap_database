@@ -51,7 +51,24 @@ if ($ADMIN->fulltree) {
 
     $settings->add(new admin_setting_configcheckbox('enrol_database/debugdb', get_string('debugdb', 'enrol_database'), get_string('debugdb_desc', 'enrol_database'), 0));
 
+    //--- uoa LDAP Setting
+    $settings->add(new admin_setting_heading('uoaldapenrolmentheader_exdbheader', 'University of Auckland LDAP Automatic Enrolment', ''));
+	
+    $settings->add(new admin_setting_heading('uoanotice', '', 'Notice: This extension of LDAP Automatic Enrolment is specific for the University of Auckland LDAP settings only. Please make sure you have added category "'.date('Y').'", courses and students will be enrolled to this category.'));
+	
+    $settings->add(new admin_setting_configcheckbox('enrol_database/useofldap', 'Using LDAP enrolments', 'Using LDAP enrolments', 0));
+	
+    $settings->add(new admin_setting_configtext('enrol_database/ldaphost_url', 'LDAP Host URL', 'Specify LDAP host in URL-form like \'ldap://ldap.myorg.com/\' or \'ldaps://ldap.myorg.com/\'', 'ldaps://ldap-vip.auckland.ac.nz/'));
+	
+    $settings->add(new admin_setting_configtext('enrol_database/ldapuser', 'Bind user distinguished name', 'If you want to use a bind user to search users, specify it here. Someting like \'cn=ldapuser,ou=public,o=org\'', ''));
 
+    $settings->add(new admin_setting_configpasswordunmask('enrol_database/ldappass', 'LDAP Password', '', ''));
+	
+    $settings->add(new admin_setting_configtext('enrol_database/ldaplookup', 'LDAP lookup contexts', 'Select how courses are stored in LDAP', 'ou=ec_group,dc=ec,dc=auckland,dc=ac,dc=nz'));
+	
+    $settings->add(new admin_setting_configtextarea('enrol_database/ldapcourse', 'Courses lookup', 'Select courses to be automatically enrolled such as COMPSCI.1\*.C.S2.2014 SOFTENG.2\*.C.S2.2014 (separated by spaces or newlines)', ''));
+		
+    //--- end of uoa LDAP Setting
 
     $settings->add(new admin_setting_heading('enrol_database_localheader', get_string('settingsheaderlocal', 'enrol_database'), ''));
 
